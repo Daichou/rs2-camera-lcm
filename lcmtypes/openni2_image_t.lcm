@@ -1,4 +1,5 @@
 package openni2;
+// https://github.com/openhumanoids/openni2-camera-lcm
 // this was copied from libbot, bot_core lcmtypes package
 
 // Describes an image

@@ -1,5 +1,5 @@
 package openni2;
-
+// https://github.com/openhumanoids/openni2-camera-lcm
 // simple array of images
 // introduced to support Multisense SL disparity data
 // this message is now integrated into libbot

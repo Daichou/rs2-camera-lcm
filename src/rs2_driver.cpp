@@ -95,7 +95,7 @@ void rs2_driver::rs2_image_grabber()
         depth_image->nmetadata = 0;
         depth_image->row_stride = sizeof(unsigned char) * 3 * depth_image->width;//  get_stride_in_bytes() ??
         depth_image->pixelformat = openni2::image_t::PIXEL_FORMAT_INVALID; //depth is not encode in normal way
-        int data_size = current_depth_frame.get_width() * current_depth_frame.get_height() * 3;
+        int data_size = current_depth_frame.get_width() * current_depth_frame.get_height() * 2;
         std::cout << "data_size = " << data_size << std::endl;
         depth_image->size = data_size;
         depth_image->data.resize(data_size);

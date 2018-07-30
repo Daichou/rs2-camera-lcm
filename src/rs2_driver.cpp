@@ -40,21 +40,49 @@
 #include <lcmtypes/openni2/image_metadata_t.hpp>
 #include <lcm/lcm-cpp.hpp>
 
-class rs2_driver
+rs2_driver::rs2_driver(std::shared_ptr<lcm::LCM> &lcm) :
+    rs2_lcm(lcm)
 {
-public:
-    rs2_driver(std::shared_ptr<lcm::LCM> &lcm);
-    ~rs2_driver();
-private:
+	initSuccess = true;
     rs2_init_device();
     rs2_config();
     rs2_image_grabber();
-    rs2::device *dev;
-    rs2::context ctx;
-    rs2::config cfg;
-    rs2::pipeline pipe;
-    std::shared_ptr<lcm::LCM> rs2_lcm;
-    bool initSuccessful;
+}
+
+rs2_driver::~rs2_driver(){};
+
+rs2_driver::rs2_init_device()
+{
+	auto list = ctx.query_devices();
+    if (list.size() == 0){
+        errorText = "No device connected.";
+        initSuccessful = false;
+        return -1;
+    }
+
+	std::cout << "Total " << list.size() << "devices." << std::endl
+			<< "list all valid rs2 devices:" << std::endl;
+
+	for (auto& it : list ) {
+		std::cout << it.get_info(RS2_CAMERA_INFO_NAME) << " " <<
+				it.get_info(RS2_CAMERA_INFO_SERIAL_NUMBER) << std::endl;
+	}
+
+	std::cout << "!!! default use first device !!!" << std::endl;
+
+	dev = &list.front();
+}
+
+rs2_driver::rs2_config()
+{
+    cfg.enable_stream(RS2_STREAM_COLOR, 640, 480, RS2_FORMAT_RGB8,30);
+    cfg.enable_stream(RS2_STREAM_DEPTH, 640, 480, RS2_FORMAT_Z16, 30);//PIXEL_FORMAT_GRAY16 in openni?
+    std::cout << dev->get_info(RS2_CAMERA_INFO_NAME) << " " << dev->get_info(RS2_CAMERA_INFO_SERIAL_NUMBER) << std::endl;
+}
+
+rs2_driver::rs2_image_grabber()
+{
+	
 }
 
 #endif

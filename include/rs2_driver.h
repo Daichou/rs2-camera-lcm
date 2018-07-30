@@ -35,9 +35,9 @@
 #include <iostream>
 #include <memory>
 
-#include <lcmtypes/openni2/image_t.hpp>
-#include <lcmtypes/openni2/images_t.hpp>
-#include <lcmtypes/openni2/image_metadata_t.hpp>
+#include <openni2/image_t.hpp>
+#include <openni2/images_t.hpp>
+#include <openni2/image_metadata_t.hpp>
 #include <lcm/lcm-cpp.hpp>
 
 class rs2_driver
@@ -46,15 +46,15 @@ public:
     rs2_driver(std::shared_ptr<lcm::LCM> &lcm);
     ~rs2_driver();
 private:
-    rs2_init_device();
-    rs2_config();
-    rs2_image_grabber();
+    void rs2_init_device();
+    void rs2_config();
+    void rs2_image_grabber();
     rs2::device *dev;
     rs2::context ctx;
     rs2::config cfg;
     rs2::pipeline pipe;
     std::shared_ptr<lcm::LCM> rs2_lcm;
-    bool initSuccessful;
-}
+    bool initSuccess;
+};
 
 #endif

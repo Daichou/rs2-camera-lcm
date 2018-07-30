@@ -28,17 +28,16 @@
  * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-#ifndef _RS2_DRIVER_H_
-#define _RS2_DRIVER_H_
 
+#include "rs2_driver.h"
 #include "librealsense2/rs.hpp"
 #include <iostream>
 #include <memory>
 #include <cstring>
 
-#include <lcmtypes/openni2/image_t.hpp>
-#include <lcmtypes/openni2/images_t.hpp>
-#include <lcmtypes/openni2/image_metadata_t.hpp>
+#include <openni2/image_t.hpp>
+#include <openni2/images_t.hpp>
+#include <openni2/image_metadata_t.hpp>
 #include <lcm/lcm-cpp.hpp>
 #include <zlib.h>
 
@@ -53,42 +52,40 @@ rs2_driver::rs2_driver(std::shared_ptr<lcm::LCM> &lcm) :
 
 rs2_driver::~rs2_driver(){};
 
-rs2_driver::rs2_init_device()
+void rs2_driver::rs2_init_device()
 {
 	auto list = ctx.query_devices();
     if (list.size() == 0){
-        errorText = "No device connected.";
-        initSuccessful = false;
-        return -1;
+        initSuccess = false;
     }
 
 	std::cout << "Total " << list.size() << "devices." << std::endl
 			<< "list all valid rs2 devices:" << std::endl;
 
-	for (auto& it : list ) {
-		std::cout << it.get_info(RS2_CAMERA_INFO_NAME) << " " <<
-				it.get_info(RS2_CAMERA_INFO_SERIAL_NUMBER) << std::endl;
-	}
+	//for (auto& it : list ) {
+	//	std::cout << it.get_info(RS2_CAMERA_INFO_NAME) << " " <<
+   //				it.get_info(RS2_CAMERA_INFO_SERIAL_NUMBER) << std::endl;
+    //}
 
 	std::cout << "!!! default use first device !!!" << std::endl;
 
-	dev = &list.front();
+    rs2::device tmp_dev = list.front();
+    dev = &tmp_dev;
 }
 
-rs2_driver::rs2_config()
+void rs2_driver::rs2_config()
 {
     cfg.enable_stream(RS2_STREAM_COLOR, 640, 480, RS2_FORMAT_RGB8,30);
     cfg.enable_stream(RS2_STREAM_DEPTH, 640, 480, RS2_FORMAT_Z16, 30);//PIXEL_FORMAT_GRAY16 in openni?
-    std::cout << dev->get_info(RS2_CAMERA_INFO_NAME) << " " << dev->get_info(RS2_CAMERA_INFO_SERIAL_NUMBER) << std::endl;
 }
 
-rs2_driver::rs2_image_grabber()
+void rs2_driver::rs2_image_grabber()
 {
     pipe.start(cfg);
 
     while (true) {
-   		std::share_ptr<openni::image_t> depth_image(openni::image_t);
-   		std::share_ptr<openni::image_t> color_image(openni::image_t);
+   		std::shared_ptr<openni2::image_t> depth_image(new openni2::image_t);
+   		std::shared_ptr<openni2::image_t> color_image(new openni2::image_t);
 		auto frames = pipe.wait_for_frames();
 		rs2::depth_frame current_depth_frame = frames.get_depth_frame();
 		rs2::video_frame current_color_frame = frames.get_color_frame();
@@ -98,12 +95,14 @@ rs2_driver::rs2_image_grabber()
         depth_image->nmetadata = 0;
         depth_image->row_stride = sizeof(unsigned char) * 3 * depth_image->width;//  get_stride_in_bytes() ??
         depth_image->pixelformat = openni2::image_t::PIXEL_FORMAT_INVALID; //depth is not encode in normal way
-        depth_image->size = current_depth_frame.get_width() * current_depth_frame.get_height() * 3;
-        depth_image->data.resize(depth_image.size);
-        memcpy(depth_image->data[0], current_depth_frame.get_data(), depth_image->size);
+        int data_size = current_depth_frame.get_width() * current_depth_frame.get_height() * 3;
+        std::cout << "data_size = " << data_size << std::endl;
+        depth_image->size = data_size;
+        depth_image->data.resize(data_size);
+        std::cout << "New size = " << depth_image->data.size() << std::endl;
+        memcpy(&depth_image->data[0], current_depth_frame.get_data(), data_size);
 
-        lcm_->publish( "OPENNI_DEPTH", &depth_image);
+        rs2_lcm->publish( "OPENNI_DEPTH", depth_image.get());
     }
 }
 
-#endif

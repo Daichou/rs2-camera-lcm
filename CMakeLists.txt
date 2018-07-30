@@ -2,14 +2,14 @@
 cmake_minimum_required(VERSION 2.6)
 
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_CURRENT_SOURCE_DIR}")
-
+set (CMAKE_CXX_STANDARD 11)
 project(rs2-camera-lcm)
 
 find_package(lcm REQUIRED)
 
 find_package(RealSense2 REQUIRED)
 
-find_package(zlib REQUIRED)
+find_package(ZLIB REQUIRED)
 
 include_directories(
     include

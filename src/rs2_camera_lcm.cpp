@@ -34,9 +34,6 @@
 #include <memory>
 #include <cstring>
 
-#include <lcmtypes/openni2/image_t.hpp>
-#include <lcmtypes/openni2/images_t.hpp>
-#include <lcmtypes/openni2/image_metadata_t.hpp>
 #include <lcm/lcm-cpp.hpp>
 #include <zlib.h>
 #include "rs2_driver.h"
@@ -45,7 +42,7 @@
 
 int main()
 {
-    std::share_ptr<lcm::LCM> lcm(new lcm::LCM);
+    std::shared_ptr<lcm::LCM> lcm(new lcm::LCM);
     if (!lcm->good())
         std::cerr << "Error: lcm is not good" << std::endl;
 

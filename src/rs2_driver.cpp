@@ -34,11 +34,13 @@
 #include "librealsense2/rs.hpp"
 #include <iostream>
 #include <memory>
+#include <cstring>
 
 #include <lcmtypes/openni2/image_t.hpp>
 #include <lcmtypes/openni2/images_t.hpp>
 #include <lcmtypes/openni2/image_metadata_t.hpp>
 #include <lcm/lcm-cpp.hpp>
+#include <zlib.h>
 
 rs2_driver::rs2_driver(std::shared_ptr<lcm::LCM> &lcm) :
     rs2_lcm(lcm)
@@ -82,7 +84,26 @@ rs2_driver::rs2_config()
 
 rs2_driver::rs2_image_grabber()
 {
-	
+    pipe.start(cfg);
+
+    while (true) {
+   		std::share_ptr<openni::image_t> depth_image(openni::image_t);
+   		std::share_ptr<openni::image_t> color_image(openni::image_t);
+		auto frames = pipe.wait_for_frames();
+		rs2::depth_frame current_depth_frame = frames.get_depth_frame();
+		rs2::video_frame current_color_frame = frames.get_color_frame();
+
+        depth_image->width = current_depth_frame.get_width();
+		depth_image->height = current_depth_frame.get_width();
+        depth_image->nmetadata = 0;
+        depth_image->row_stride = sizeof(unsigned char) * 3 * depth_image->width;//  get_stride_in_bytes() ??
+        depth_image->pixelformat = openni2::image_t::PIXEL_FORMAT_INVALID; //depth is not encode in normal way
+        depth_image->size = current_depth_frame.get_width() * current_depth_frame.get_height() * 3;
+        depth_image->data.resize(depth_image.size);
+        memcpy(depth_image->data[0], current_depth_frame.get_data(), depth_image->size);
+
+        lcm_->publish( "OPENNI_DEPTH", &depth_image);
+    }
 }
 
 #endif

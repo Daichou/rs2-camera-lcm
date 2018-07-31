@@ -34,17 +34,26 @@
 #include <iostream>
 #include <memory>
 #include <cstring>
-
 #include <openni2/image_t.hpp>
 #include <openni2/images_t.hpp>
 #include <openni2/image_metadata_t.hpp>
 #include <lcm/lcm-cpp.hpp>
 #include <zlib.h>
+#include <cstdlib>
+#include "jpeg_utils.h"
 
 rs2_driver::rs2_driver(std::shared_ptr<lcm::LCM> &lcm) :
     rs2_lcm(lcm)
 {
 	initSuccess = true;
+    jpeg_buf_size = 640 * 480 * 10;
+	if (0 != posix_memalign((void**) &jpeg_buf, 16, jpeg_buf_size)) {
+      	fprintf(stderr, "Error allocating image buffer\n");
+  	}
+
+ 	// allocate space for zlib compressing depth data
+  	zlib_buf_size = 640 * 480 * sizeof(int16_t) * 4;
+  	zlib_buf = (uint8_t*) malloc(zlib_buf_size);
     rs2_init_device();
     rs2_config();
     rs2_image_grabber();
@@ -103,13 +112,23 @@ std::shared_ptr<openni2::image_t> rs2_driver::rs2_depth_lcm_generator(rs2::depth
     depth_image->utime = current_depth_frame.get_timestamp();
     depth_image->width = current_depth_frame.get_width();
     depth_image->height = current_depth_frame.get_width();
-    depth_image->nmetadata = 0;
-    depth_image->row_stride = sizeof(unsigned char) * 2 * depth_image->width;//  get_stride_in_bytes() ??
-    depth_image->pixelformat = openni2::image_t::PIXEL_FORMAT_INVALID; //depth is not encode in normal way
-    int data_size = current_depth_frame.get_width() * current_depth_frame.get_height() * 2;
+    /*
+	int data_size = current_depth_frame.get_width() * current_depth_frame.get_height() * 2;
     depth_image->size = data_size;
     depth_image->data.resize(data_size);
     memcpy(&depth_image->data[0], current_depth_frame.get_data(), data_size);
+    */
+	int uncompressed_size = depth_image->height * depth_image->width * sizeof(short);
+	unsigned long int compressed_size = zlib_buf_size;
+	compress2(zlib_buf, (uLongf*)&zlib_buf_size, (const Bytef*) current_depth_frame.get_data(), uncompressed_size,
+			  Z_BEST_SPEED);
+	depth_image->size =(int)compressed_size;
+	depth_image->data.resize(compressed_size);
+	memcpy(&depth_image->data[0], zlib_buf, compressed_size);
+
+	depth_image->nmetadata = 0;
+    depth_image->row_stride = sizeof(unsigned char) * 2 * depth_image->width;//  get_stride_in_bytes() ??
+    depth_image->pixelformat = openni2::image_t::PIXEL_FORMAT_INVALID; //depth is not encode in normal way
     return depth_image;
 }
 
@@ -119,13 +138,27 @@ std::shared_ptr<openni2::image_t> rs2_driver::rs2_color_lcm_generator(rs2::video
     color_image->utime = current_color_frame.get_timestamp();
     color_image->width = current_color_frame.get_width();
     color_image->height = current_color_frame.get_width();
+
+	//int data_size = current_color_frame.get_width() * current_color_frame.get_height() * 2;
+    //color_image->data.resize(data_size);
+    //memcpy(&color_image->data[0], current_color_frame.get_data(), data_size);
+
+	int compressed_size =  color_image->height * color_image->row_stride;//image_buf_size;
+	int compression_status = jpeg_compress_rgb((const uint8_t*)current_color_frame.get_data(),
+				color_image->width, color_image->height,
+				color_image->row_stride, jpeg_buf, &compressed_size, 94);
+
+	if (compression_status) {
+		std::cerr << "JPEG compression failed..." << std::endl;
+	}
+
+	color_image->data.resize(compressed_size);
+	memcpy(&color_image->data[0], jpeg_buf, compressed_size);
+	color_image->size = compressed_size;
     color_image->nmetadata = 0;
     color_image->row_stride = sizeof(unsigned char) * 3 * color_image->width;//  get_stride_in_bytes() ??
-    color_image->pixelformat = openni2::image_t::PIXEL_FORMAT_RGB; //RGB888
-    int data_size = current_color_frame.get_width() * current_color_frame.get_height() * 2;
-    color_image->size = data_size;
-    color_image->data.resize(data_size);
-    memcpy(&color_image->data[0], current_color_frame.get_data(), data_size);
+    //color_image->pixelformat = openni2::image_t::PIXEL_FORMAT_RGB; //RGB888
+    color_image->pixelformat = openni2::image_t::PIXEL_FORMAT_MJPEG; //jpeg
     return color_image;
 }
 

@@ -39,6 +39,7 @@
 #include <openni2/images_t.hpp>
 #include <openni2/image_metadata_t.hpp>
 #include <lcm/lcm-cpp.hpp>
+#include <cstdint>
 
 class rs2_driver
 {
@@ -60,6 +61,10 @@ private:
     rs2::pipeline pipe;
     std::shared_ptr<lcm::LCM> rs2_lcm;
     bool initSuccess;
+    int jpeg_buf_size;
+    uint8_t* jpeg_buf;
+    int zlib_buf_size;
+    uint8_t* zlib_buf;
 };
 
 #endif

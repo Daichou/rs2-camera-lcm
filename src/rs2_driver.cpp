@@ -102,7 +102,7 @@ void rs2_driver::rs2_image_grabber()
         depth_image = rs2_depth_lcm_generator(current_depth_frame);
         color_image = rs2_color_lcm_generator(current_color_frame);
         images = rs2_package_lcm_generator(depth_image, color_image);
-        rs2_lcm->publish( "OPENNI", images.get());
+        rs2_lcm->publish( "OPENNI_FRAME", images.get());
     }
 }
 

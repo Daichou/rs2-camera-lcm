@@ -84,25 +84,51 @@ void rs2_driver::rs2_image_grabber()
     pipe.start(cfg);
 
     while (true) {
-   		std::shared_ptr<openni2::image_t> depth_image(new openni2::image_t);
-   		std::shared_ptr<openni2::image_t> color_image(new openni2::image_t);
+        std::shared_ptr<openni2::image_t> depth_image(new openni2::image_t);
+        std::shared_ptr<openni2::image_t> color_image(new openni2::image_t);
 		auto frames = pipe.wait_for_frames();
 		rs2::depth_frame current_depth_frame = frames.get_depth_frame();
 		rs2::video_frame current_color_frame = frames.get_color_frame();
-
-        depth_image->width = current_depth_frame.get_width();
-		depth_image->height = current_depth_frame.get_width();
-        depth_image->nmetadata = 0;
-        depth_image->row_stride = sizeof(unsigned char) * 3 * depth_image->width;//  get_stride_in_bytes() ??
-        depth_image->pixelformat = openni2::image_t::PIXEL_FORMAT_INVALID; //depth is not encode in normal way
-        int data_size = current_depth_frame.get_width() * current_depth_frame.get_height() * 2;
-        std::cout << "data_size = " << data_size << std::endl;
-        depth_image->size = data_size;
-        depth_image->data.resize(data_size);
-        std::cout << "New size = " << depth_image->data.size() << std::endl;
-        memcpy(&depth_image->data[0], current_depth_frame.get_data(), data_size);
+        depth_image = rs2_depth_lcm_generator(current_depth_frame);
+        color_image = rs2_color_lcm_generator(current_color_frame);
 
         rs2_lcm->publish( "OPENNI_DEPTH", depth_image.get());
+        rs2_lcm->publish( "OPENNI_RGB", color_image.get());
     }
 }
 
+std::shared_ptr<openni2::image_t> rs2_driver::rs2_depth_lcm_generator(rs2::depth_frame& current_depth_frame)
+{
+    std::shared_ptr<openni2::image_t> depth_image(new openni2::image_t);
+    depth_image->width = current_depth_frame.get_width();
+    depth_image->height = current_depth_frame.get_width();
+    depth_image->nmetadata = 0;
+    depth_image->row_stride = sizeof(unsigned char) * 2 * depth_image->width;//  get_stride_in_bytes() ??
+    depth_image->pixelformat = openni2::image_t::PIXEL_FORMAT_INVALID; //depth is not encode in normal way
+    int data_size = current_depth_frame.get_width() * current_depth_frame.get_height() * 2;
+    depth_image->size = data_size;
+    depth_image->data.resize(data_size);
+    memcpy(&depth_image->data[0], current_depth_frame.get_data(), data_size);
+    return depth_image;
+}
+
+std::shared_ptr<openni2::image_t> rs2_driver::rs2_color_lcm_generator(rs2::video_frame& current_color_frame)
+{
+    std::shared_ptr<openni2::image_t> color_image(new openni2::image_t);
+    color_image->width = current_color_frame.get_width();
+    color_image->height = current_color_frame.get_width();
+    color_image->nmetadata = 0;
+    color_image->row_stride = sizeof(unsigned char) * 3 * color_image->width;//  get_stride_in_bytes() ??
+    color_image->pixelformat = openni2::image_t::PIXEL_FORMAT_RGB; //RGB888
+    int data_size = current_color_frame.get_width() * current_color_frame.get_height() * 2;
+    color_image->size = data_size;
+    color_image->data.resize(data_size);
+    memcpy(&color_image->data[0], current_color_frame.get_data(), data_size);
+    return color_image;
+}
+
+std::shared_ptr<openni2::images_t> rs2_driver::rs2_package_lcm_generator(std::shared_ptr<openni2::image_t> &depth_image,
+        std::shared_ptr<openni2::image_t>)
+{
+
+}

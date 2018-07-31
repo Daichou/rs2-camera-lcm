@@ -49,6 +49,11 @@ private:
     void rs2_init_device();
     void rs2_config();
     void rs2_image_grabber();
+    std::shared_ptr<openni2::image_t> rs2_depth_lcm_generator(rs2::depth_frame&);
+    std::shared_ptr<openni2::image_t> rs2_color_lcm_generator(rs2::video_frame&);
+    std::shared_ptr<openni2::images_t> rs2_package_lcm_generator(
+            std::shared_ptr<openni2::image_t> &depth_image,
+            std::shared_ptr<openni2::image_t> &color_image);
     rs2::device *dev;
     rs2::context ctx;
     rs2::config cfg;

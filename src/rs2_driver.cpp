@@ -86,20 +86,21 @@ void rs2_driver::rs2_image_grabber()
     while (true) {
         std::shared_ptr<openni2::image_t> depth_image(new openni2::image_t);
         std::shared_ptr<openni2::image_t> color_image(new openni2::image_t);
+        std::shared_ptr<openni2::images_t> images(new openni2::images_t);
 		auto frames = pipe.wait_for_frames();
 		rs2::depth_frame current_depth_frame = frames.get_depth_frame();
 		rs2::video_frame current_color_frame = frames.get_color_frame();
         depth_image = rs2_depth_lcm_generator(current_depth_frame);
         color_image = rs2_color_lcm_generator(current_color_frame);
-
-        rs2_lcm->publish( "OPENNI_DEPTH", depth_image.get());
-        rs2_lcm->publish( "OPENNI_RGB", color_image.get());
+        images = rs2_package_lcm_generator(depth_image, color_image);
+        rs2_lcm->publish( "OPENNI", images.get());
     }
 }
 
 std::shared_ptr<openni2::image_t> rs2_driver::rs2_depth_lcm_generator(rs2::depth_frame& current_depth_frame)
 {
     std::shared_ptr<openni2::image_t> depth_image(new openni2::image_t);
+    depth_image->utime = current_depth_frame.get_timestamp();
     depth_image->width = current_depth_frame.get_width();
     depth_image->height = current_depth_frame.get_width();
     depth_image->nmetadata = 0;
@@ -115,6 +116,7 @@ std::shared_ptr<openni2::image_t> rs2_driver::rs2_depth_lcm_generator(rs2::depth
 std::shared_ptr<openni2::image_t> rs2_driver::rs2_color_lcm_generator(rs2::video_frame& current_color_frame)
 {
     std::shared_ptr<openni2::image_t> color_image(new openni2::image_t);
+    color_image->utime = current_color_frame.get_timestamp();
     color_image->width = current_color_frame.get_width();
     color_image->height = current_color_frame.get_width();
     color_image->nmetadata = 0;
@@ -127,8 +129,17 @@ std::shared_ptr<openni2::image_t> rs2_driver::rs2_color_lcm_generator(rs2::video
     return color_image;
 }
 
-std::shared_ptr<openni2::images_t> rs2_driver::rs2_package_lcm_generator(std::shared_ptr<openni2::image_t> &depth_image,
-        std::shared_ptr<openni2::image_t>)
+std::shared_ptr<openni2::images_t> rs2_driver::rs2_package_lcm_generator(
+        std::shared_ptr<openni2::image_t> &depth_image,
+        std::shared_ptr<openni2::image_t> &color_image)
 {
+    std::shared_ptr<openni2::images_t> images(new openni2::images_t);
+    images->utime = depth_image->utime;
+    images->n_images = 2;
+    images->images.push_back(*color_image);
+    images->images.push_back(*depth_image);
+    images->image_types.push_back(0); //LEFT = 0
+    images->image_types.push_back(6); //DEPTH_MM_ZIPPED = 0
 
+    return images;
 }

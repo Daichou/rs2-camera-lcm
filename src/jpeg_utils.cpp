@@ -39,25 +39,25 @@
  **/
 
 
-static void
+    static void
 init_destination (j_compress_ptr cinfo)
 {
 }
 
-static boolean
+    static boolean
 empty_output_buffer (j_compress_ptr cinfo)
 {
     fprintf (stderr, "Error: JPEG compressor ran out of buffer space\n");
     return TRUE;
 }
 
-static void
+    static void
 term_destination (j_compress_ptr cinfo)
 {
 }
 
 int jpeg_compress_rgb(const uint8_t * src, int width, int height, int stride,
-                uint8_t * dest, int * destsize, int quality)
+        uint8_t * dest, int * destsize, int quality)
 {
     struct jpeg_compress_struct cinfo;
     struct jpeg_error_mgr jerr;
@@ -66,7 +66,7 @@ int jpeg_compress_rgb(const uint8_t * src, int width, int height, int stride,
     cinfo.err = jpeg_std_error(&jerr);
     jpeg_create_compress(&cinfo);
 
-	int out_size = *destsize;
+    int out_size = *destsize;
     jdest.next_output_byte = dest;
     jdest.free_in_buffer = out_size;
     jdest.init_destination = init_destination;
@@ -83,18 +83,18 @@ int jpeg_compress_rgb(const uint8_t * src, int width, int height, int stride,
     jpeg_set_quality(&cinfo, quality, TRUE);
     jpeg_start_compress(&cinfo, TRUE);
 
-	while (cinfo.next_scanline < height) {
+    while (cinfo.next_scanline < height) {
         JSAMPROW row = (JSAMPROW)(src + cinfo.next_scanline * stride);
         jpeg_write_scanlines (&cinfo, &row, 1);
     }
     jpeg_finish_compress (&cinfo);
     *destsize = out_size - jdest.free_in_buffer;
     jpeg_destroy_compress (&cinfo);
-	return 0;
+    return 0;
 }
 
 int jpeg_compress_gray(const uint8_t * src, int width, int height, int stride,
-                uint8_t * dest, int * destsize, int quality)
+        uint8_t * dest, int * destsize, int quality)
 {
     struct jpeg_compress_struct cinfo;
     struct jpeg_error_mgr jerr;
@@ -103,7 +103,7 @@ int jpeg_compress_gray(const uint8_t * src, int width, int height, int stride,
     cinfo.err = jpeg_std_error(&jerr);
     jpeg_create_compress(&cinfo);
 
-	int out_size = *destsize;
+    int out_size = *destsize;
     jdest.next_output_byte = dest;
     jdest.free_in_buffer = out_size;
     jdest.init_destination = init_destination;
@@ -120,12 +120,12 @@ int jpeg_compress_gray(const uint8_t * src, int width, int height, int stride,
     jpeg_set_quality(&cinfo, quality, TRUE);
     jpeg_start_compress(&cinfo, TRUE);
 
-	while (cinfo.next_scanline < height) {
+    while (cinfo.next_scanline < height) {
         JSAMPROW row = (JSAMPROW)(src + cinfo.next_scanline * stride);
         jpeg_write_scanlines (&cinfo, &row, 1);
     }
     jpeg_finish_compress (&cinfo);
     *destsize = out_size - jdest.free_in_buffer;
     jpeg_destroy_compress (&cinfo);
-	return 0;
+    return 0;
 }

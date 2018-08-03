@@ -45,15 +45,15 @@
 rs2_driver::rs2_driver(std::shared_ptr<lcm::LCM> &lcm) :
     rs2_lcm(lcm)
 {
-	initSuccess = true;
+    initSuccess = true;
     jpeg_buf_size = 640 * 480 * 10;
-	if (0 != posix_memalign((void**) &jpeg_buf, 16, jpeg_buf_size)) {
-      	fprintf(stderr, "Error allocating image buffer\n");
-  	}
+    if (0 != posix_memalign((void**) &jpeg_buf, 16, jpeg_buf_size)) {
+        fprintf(stderr, "Error allocating image buffer\n");
+    }
 
- 	// allocate space for zlib compressing depth data
-  	zlib_buf_size = 640 * 480 * sizeof(int16_t) * 4;
-  	zlib_buf = (uint8_t*) malloc(zlib_buf_size);
+    // allocate space for zlib compressing depth data
+    zlib_buf_size = 640 * 480 * sizeof(int16_t) * 4;
+    zlib_buf = (uint8_t*) malloc(zlib_buf_size);
     rs2_init_device();
     rs2_config();
     rs2_image_grabber();
@@ -63,20 +63,20 @@ rs2_driver::~rs2_driver(){};
 
 void rs2_driver::rs2_init_device()
 {
-	auto list = ctx.query_devices();
+    auto list = ctx.query_devices();
     if (list.size() == 0){
         initSuccess = false;
     }
 
-	std::cout << "Total " << list.size() << "devices." << std::endl
-			<< "list all valid rs2 devices:" << std::endl;
+    std::cout << "Total " << list.size() << "devices." << std::endl
+        << "list all valid rs2 devices:" << std::endl;
 
-	//for (auto& it : list ) {
-	//	std::cout << it.get_info(RS2_CAMERA_INFO_NAME) << " " <<
-   //				it.get_info(RS2_CAMERA_INFO_SERIAL_NUMBER) << std::endl;
+    //for (auto& it : list ) {
+    //	std::cout << it.get_info(RS2_CAMERA_INFO_NAME) << " " <<
+    //				it.get_info(RS2_CAMERA_INFO_SERIAL_NUMBER) << std::endl;
     //}
 
-	std::cout << "!!! default use first device !!!" << std::endl;
+    std::cout << "!!! default use first device !!!" << std::endl;
 
     rs2::device tmp_dev = list.front();
     dev = &tmp_dev;
@@ -96,9 +96,9 @@ void rs2_driver::rs2_image_grabber()
         std::shared_ptr<openni2::image_t> depth_image(new openni2::image_t);
         std::shared_ptr<openni2::image_t> color_image(new openni2::image_t);
         std::shared_ptr<openni2::images_t> images(new openni2::images_t);
-		auto frames = pipe.wait_for_frames();
-		rs2::depth_frame current_depth_frame = frames.get_depth_frame();
-		rs2::video_frame current_color_frame = frames.get_color_frame();
+        auto frames = pipe.wait_for_frames();
+        rs2::depth_frame current_depth_frame = frames.get_depth_frame();
+        rs2::video_frame current_color_frame = frames.get_color_frame();
         depth_image = rs2_depth_lcm_generator(current_depth_frame);
         color_image = rs2_color_lcm_generator(current_color_frame);
         images = rs2_package_lcm_generator(depth_image, color_image);
@@ -112,22 +112,22 @@ std::shared_ptr<openni2::image_t> rs2_driver::rs2_depth_lcm_generator(rs2::depth
     depth_image->utime = current_depth_frame.get_timestamp();
     depth_image->width = current_depth_frame.get_width();
     depth_image->height = current_depth_frame.get_width();
-    /*
-	int data_size = current_depth_frame.get_width() * current_depth_frame.get_height() * 2;
-    depth_image->size = data_size;
-    depth_image->data.resize(data_size);
-    memcpy(&depth_image->data[0], current_depth_frame.get_data(), data_size);
-    */
-	int uncompressed_size = depth_image->height * depth_image->width * sizeof(short);
-	unsigned long int compressed_size = zlib_buf_size;
-	compress2(zlib_buf, (uLongf*)&zlib_buf_size, (const Bytef*) current_depth_frame.get_data(), uncompressed_size,
-			  Z_BEST_SPEED);
-	depth_image->size =(int)compressed_size;
-	depth_image->data.resize(compressed_size);
-	memcpy(&depth_image->data[0], zlib_buf, compressed_size);
-
-	depth_image->nmetadata = 0;
+    depth_image->nmetadata = 0;
     depth_image->row_stride = sizeof(unsigned char) * 2 * depth_image->width;//  get_stride_in_bytes() ??
+    /*
+       int data_size = current_depth_frame.get_width() * current_depth_frame.get_height() * 2;
+       depth_image->size = data_size;
+       depth_image->data.resize(data_size);
+       memcpy(&depth_image->data[0], current_depth_frame.get_data(), data_size);
+       */
+    int uncompressed_size = depth_image->height * depth_image->width * sizeof(short);
+    unsigned long int compressed_size = zlib_buf_size;
+    compress2(zlib_buf, (uLongf*)&zlib_buf_size, (const Bytef*) current_depth_frame.get_data(), uncompressed_size,
+            Z_BEST_SPEED);
+    depth_image->size =(int)compressed_size;
+    depth_image->data.resize(compressed_size);
+    memcpy(&depth_image->data[0], zlib_buf, compressed_size);
+
     depth_image->pixelformat = openni2::image_t::PIXEL_FORMAT_INVALID; //depth is not encode in normal way
     return depth_image;
 }
@@ -138,25 +138,25 @@ std::shared_ptr<openni2::image_t> rs2_driver::rs2_color_lcm_generator(rs2::video
     color_image->utime = current_color_frame.get_timestamp();
     color_image->width = current_color_frame.get_width();
     color_image->height = current_color_frame.get_width();
+    color_image->nmetadata = 0;
+    color_image->row_stride = sizeof(unsigned char) * 3 * color_image->width;//  get_stride_in_bytes() ??
 
-	//int data_size = current_color_frame.get_width() * current_color_frame.get_height() * 2;
+    //int data_size = current_color_frame.get_width() * current_color_frame.get_height() * 2;
     //color_image->data.resize(data_size);
     //memcpy(&color_image->data[0], current_color_frame.get_data(), data_size);
 
-	int compressed_size =  color_image->height * color_image->row_stride;//image_buf_size;
-	int compression_status = jpeg_compress_rgb((const uint8_t*)current_color_frame.get_data(),
-				color_image->width, color_image->height,
-				color_image->row_stride, jpeg_buf, &compressed_size, 94);
+    int compressed_size =  color_image->height * color_image->row_stride;//image_buf_size;
+    int compression_status = jpeg_compress_rgb((const uint8_t*)current_color_frame.get_data(),
+            color_image->width, color_image->height,
+            color_image->row_stride, jpeg_buf, &compressed_size, 94);
 
-	if (compression_status) {
-		std::cerr << "JPEG compression failed..." << std::endl;
-	}
+    if (compression_status) {
+        std::cerr << "JPEG compression failed..." << std::endl;
+    }
 
-	color_image->data.resize(compressed_size);
-	memcpy(&color_image->data[0], jpeg_buf, compressed_size);
-	color_image->size = compressed_size;
-    color_image->nmetadata = 0;
-    color_image->row_stride = sizeof(unsigned char) * 3 * color_image->width;//  get_stride_in_bytes() ??
+    color_image->data.resize(compressed_size);
+    memcpy(&color_image->data[0], jpeg_buf, compressed_size);
+    color_image->size = compressed_size;
     //color_image->pixelformat = openni2::image_t::PIXEL_FORMAT_RGB; //RGB888
     color_image->pixelformat = openni2::image_t::PIXEL_FORMAT_MJPEG; //jpeg
     return color_image;

@@ -39,8 +39,8 @@
  **/
 
 int jpeg_compress_rgb(const uint8_t * src, int weidth, int height, int stride,
-                uint8_t * dest, int * destsize, int quality);
+        uint8_t * dest, int * destsize, int quality);
 
 int jpeg_compress_gray(const uint8_t * src, int weidth, int height, int stride,
-                uint8_t * dest, int * destsize, int quality);
+        uint8_t * dest, int * destsize, int quality);
 #endif

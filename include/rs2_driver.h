@@ -43,28 +43,28 @@
 
 class rs2_driver
 {
-public:
-    rs2_driver(std::shared_ptr<lcm::LCM> &lcm);
-    ~rs2_driver();
-private:
-    void rs2_init_device();
-    void rs2_config();
-    void rs2_image_grabber();
-    std::shared_ptr<openni2::image_t> rs2_depth_lcm_generator(rs2::depth_frame&);
-    std::shared_ptr<openni2::image_t> rs2_color_lcm_generator(rs2::video_frame&);
-    std::shared_ptr<openni2::images_t> rs2_package_lcm_generator(
-            std::shared_ptr<openni2::image_t> &depth_image,
-            std::shared_ptr<openni2::image_t> &color_image);
-    rs2::device *dev;
-    rs2::context ctx;
-    rs2::config cfg;
-    rs2::pipeline pipe;
-    std::shared_ptr<lcm::LCM> rs2_lcm;
-    bool initSuccess;
-    int jpeg_buf_size;
-    uint8_t* jpeg_buf;
-    int zlib_buf_size;
-    uint8_t* zlib_buf;
+    public:
+        rs2_driver(std::shared_ptr<lcm::LCM> &lcm);
+        ~rs2_driver();
+    private:
+        void rs2_init_device();
+        void rs2_config();
+        void rs2_image_grabber();
+        std::shared_ptr<openni2::image_t> rs2_depth_lcm_generator(rs2::depth_frame&);
+        std::shared_ptr<openni2::image_t> rs2_color_lcm_generator(rs2::video_frame&);
+        std::shared_ptr<openni2::images_t> rs2_package_lcm_generator(
+                std::shared_ptr<openni2::image_t> &depth_image,
+                std::shared_ptr<openni2::image_t> &color_image);
+        rs2::device *dev;
+        rs2::context ctx;
+        rs2::config cfg;
+        rs2::pipeline pipe;
+        std::shared_ptr<lcm::LCM> rs2_lcm;
+        bool initSuccess;
+        int jpeg_buf_size;
+        uint8_t* jpeg_buf;
+        int zlib_buf_size;
+        uint8_t* zlib_buf;
 };
 
 #endif

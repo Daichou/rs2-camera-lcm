@@ -111,7 +111,7 @@ std::shared_ptr<openni2::image_t> rs2_driver::rs2_depth_lcm_generator(rs2::depth
     std::shared_ptr<openni2::image_t> depth_image(new openni2::image_t);
     depth_image->utime = current_depth_frame.get_timestamp();
     depth_image->width = current_depth_frame.get_width();
-    depth_image->height = current_depth_frame.get_width();
+    depth_image->height = current_depth_frame.get_height();
     depth_image->nmetadata = 0;
     depth_image->row_stride = sizeof(unsigned char) * 2 * depth_image->width;//  get_stride_in_bytes() ??
     /*
@@ -137,7 +137,7 @@ std::shared_ptr<openni2::image_t> rs2_driver::rs2_color_lcm_generator(rs2::video
     std::shared_ptr<openni2::image_t> color_image(new openni2::image_t);
     color_image->utime = current_color_frame.get_timestamp();
     color_image->width = current_color_frame.get_width();
-    color_image->height = current_color_frame.get_width();
+    color_image->height = current_color_frame.get_height();
     color_image->nmetadata = 0;
     color_image->row_stride = sizeof(unsigned char) * 3 * color_image->width;//  get_stride_in_bytes() ??
 

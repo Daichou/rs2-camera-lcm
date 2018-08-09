@@ -114,15 +114,10 @@ std::shared_ptr<openni2::image_t> rs2_driver::rs2_depth_lcm_generator(rs2::depth
     depth_image->height = current_depth_frame.get_height();
     depth_image->nmetadata = 0;
     depth_image->row_stride = sizeof(unsigned char) * 2 * depth_image->width;//  get_stride_in_bytes() ??
-    /*
-       int data_size = current_depth_frame.get_width() * current_depth_frame.get_height() * 2;
-       depth_image->size = data_size;
-       depth_image->data.resize(data_size);
-       memcpy(&depth_image->data[0], current_depth_frame.get_data(), data_size);
-       */
+    
     int uncompressed_size = depth_image->height * depth_image->width * sizeof(short);
     unsigned long int compressed_size = zlib_buf_size;
-    compress2(zlib_buf, (uLongf*)&zlib_buf_size, (const Bytef*) current_depth_frame.get_data(), uncompressed_size,
+    compress2(zlib_buf, &compressed_size, (const Bytef*) current_depth_frame.get_data(), uncompressed_size,
             Z_BEST_SPEED);
     depth_image->size =(int)compressed_size;
     depth_image->data.resize(compressed_size);
@@ -140,10 +135,6 @@ std::shared_ptr<openni2::image_t> rs2_driver::rs2_color_lcm_generator(rs2::video
     color_image->height = current_color_frame.get_height();
     color_image->nmetadata = 0;
     color_image->row_stride = sizeof(unsigned char) * 3 * color_image->width;//  get_stride_in_bytes() ??
-
-    //int data_size = current_color_frame.get_width() * current_color_frame.get_height() * 2;
-    //color_image->data.resize(data_size);
-    //memcpy(&color_image->data[0], current_color_frame.get_data(), data_size);
 
     int compressed_size =  color_image->height * color_image->row_stride;//image_buf_size;
     int compression_status = jpeg_compress_rgb((const uint8_t*)current_color_frame.get_data(),
